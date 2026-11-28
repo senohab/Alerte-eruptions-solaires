@@ -113,5 +113,4 @@ resultat = {
     "mis_a_jour": MAINTENANT.isoformat(),
 }
 
-with open("alerte.json", "w", encoding="utf-8") as f:
-    json.dump(resultat, f, indent=2, ensure_ascii=False)
+# On
