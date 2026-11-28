@@ -4,7 +4,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 # --- Réglages (vous pouvez les modifier) ---
-SEUIL = 10         # 10 = on garde les éruptions M1 et plus fortes ; mettre 50 pour ne garder que M5 et plus
+SEUIL = 1         # 1 = on garde toutes les éruptions
 HEURES_LISTE = 48  # durée pendant laquelle une éruption reste dans la liste
 HEURES_ALERTE = 24 # "alerte" est vraie si une éruption date de moins de ces heures
 
