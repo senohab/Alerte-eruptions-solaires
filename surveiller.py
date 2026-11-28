@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 SEUIL = 1         # 1 = on garde toutes les éruptions
 HEURES_LISTE = 48  # durée pendant laquelle une éruption reste dans la liste
 HEURES_ALERTE = 24 # "alerte" est vraie si une éruption date de moins de ces heures
+JOURS_HISTO_FAIBLES = 30  # les éruptions faibles (C) restent 30 jours dans l'historique
+                         # les fortes (M et X) restent sans limite
 
 URL_NOAA = "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json"
 URL_DONKI = "https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?startDate={debut}&endDate={fin}"
@@ -89,8 +91,6 @@ for e in noaa:
     debut_e = en_date(e.get("begin_time")) or pic
     if not pic or not debut_e or force(classe) < SEUIL:
         continue
-    if pic < MAINTENANT - timedelta(hours=HEURES_LISTE):
-        continue
     d = trouver_donki(pic)
     position = (d or {}).get("sourceLocation") or None
     region = (d or {}).get("activeRegionNum")
@@ -107,10 +107,59 @@ for e in noaa:
 
 liste.sort(key=lambda x: x["debut_utc"], reverse=True)
 
+recentes = [x for x in liste if en_date(x["pic_utc"]) >= MAINTENANT - timedelta(hours=HEURES_LISTE)]
+
 resultat = {
-    "alerte": any(en_date(x["debut_utc"]) >= MAINTENANT - timedelta(hours=HEURES_ALERTE) for x in liste),
-    "eruptions": liste,
+    "alerte": any(en_date(x["debut_utc"]) >= MAINTENANT - timedelta(hours=HEURES_ALERTE) for x in recentes),
+    "eruptions": recentes,
     "mis_a_jour": MAINTENANT.isoformat(),
 }
 
-# On
+# On n'écrit le fichier que si quelque chose a changé (pour garder un historique léger)
+try:
+    with open("alerte.json", encoding="utf-8") as f:
+        ancien = json.load(f)
+except Exception:
+    ancien = {}
+if ancien.get("alerte") == resultat["alerte"] and ancien.get("eruptions") == resultat["eruptions"]:
+    print("Rien de nouveau, fichier inchangé.")
+else:
+    with open("alerte.json", "w", encoding="utf-8") as f:
+        json.dump(resultat, f, indent=2, ensure_ascii=False)
+    print("Fichier mis à jour.")
+
+
+# --- Historique : on garde la trace des éruptions passées ---
+def lire_fichier(nom, defaut):
+    try:
+        with open(nom, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return defaut
+
+
+histo = {x["pic_utc"]: x for x in lire_fichier("historique.json", {"eruptions": []}).get("eruptions", []) if x.get("pic_utc")}
+for x in liste:  # liste = les éruptions des 7 derniers jours (source NOAA)
+    ancien = histo.get(x["pic_utc"], {})
+    fusion = dict(x)
+    for cle in ("region", "position", "arrivee_estimee_utc", "fin_utc"):
+        if fusion.get(cle) is None and ancien.get(cle) is not None:
+            fusion[cle] = ancien[cle]
+    if fusion["vers_terre"] == "inconnu" and ancien.get("vers_terre") not in (None, "inconnu"):
+        fusion["vers_terre"] = ancien["vers_terre"]
+    histo[x["pic_utc"]] = fusion
+
+limite_faibles = MAINTENANT - timedelta(days=JOURS_HISTO_FAIBLES)
+gardees = [
+    x for x in histo.values()
+    if force(x["classe"]) >= 10 or en_date(x["pic_utc"]) >= limite_faibles
+]
+gardees.sort(key=lambda x: x["pic_utc"], reverse=True)
+
+ancien_histo = lire_fichier("historique.json", {}).get("eruptions")
+if ancien_histo == gardees:
+    print("Historique inchangé.")
+else:
+    with open("historique.json", "w", encoding="utf-8") as f:
+        json.dump({"eruptions": gardees}, f, indent=1, ensure_ascii=False)
+    print("Historique mis à jour :", len(gardees), "éruptions.")
