@@ -1,5 +1,46 @@
 {
-  "alerte": false,
-  "eruptions": [],
-  "mis_a_jour": "2026-11-28T08:22:29.527883+00:00"
+  "alerte": true,
+  "eruptions": [
+    {
+      "debut_utc": "2026-11-28T04:19:00Z",
+      "pic_utc": "2026-11-28T04:28:00Z",
+      "classe": "C2.1",
+      "region": null,
+      "position": null,
+      "vers_terre": "inconnu",
+      "arrivee_estimee_utc": null,
+      "fin_utc": "2026-11-28T04:44:00Z"
+    },
+    {
+      "debut_utc": "2026-11-27T18:41:00Z",
+      "pic_utc": "2026-11-27T18:49:00Z",
+      "classe": "C3.9",
+      "region": null,
+      "position": null,
+      "vers_terre": "inconnu",
+      "arrivee_estimee_utc": null,
+      "fin_utc": "2026-11-27T18:53:00Z"
+    },
+    {
+      "debut_utc": "2026-11-27T18:06:00Z",
+      "pic_utc": "2026-11-27T18:19:00Z",
+      "classe": "C1.1",
+      "region": null,
+      "position": null,
+      "vers_terre": "inconnu",
+      "arrivee_estimee_utc": null,
+      "fin_utc": "2026-11-27T18:31:00Z"
+    },
+    {
+      "debut_utc": "2026-11-27T14:02:00Z",
+      "pic_utc": "2026-11-27T14:13:00Z",
+      "classe": "C1.6",
+      "region": null,
+      "position": null,
+      "vers_terre": "inconnu",
+      "arrivee_estimee_utc": null,
+      "fin_utc": "2026-11-27T14:25:00Z"
+    }
+  ],
+  "mis_a_jour": "2026-11-28T13:01:04.092146+00:00"
 }
